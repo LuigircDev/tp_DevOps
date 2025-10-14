@@ -1,14 +1,15 @@
 import mysql.connector
+import os
 
 def get_db_connection():
     try:
         # connection = mysql.connector.connect(
         connection = mysql.connector.connect(
-            host="localhost",
-            user="",
-            passwd="",
-            charset='utf8mb4',
-            collation='utf8mb4_unicode_ci',
+            host="todo-mysql",
+            database=f"{os.getenv('MYSQL_DATABASE')}",
+            user=f"{os.getenv('MYSQL_USER')}",
+            passwd=f"{os.getenv('MYSQL_PASSWORD')}",
+            port=int(os.getenv('MYSQL_PORT')),
             raise_on_warnings=True
         )
 

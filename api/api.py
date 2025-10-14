@@ -1,6 +1,6 @@
 from flask import request, jsonify  # Importamos Flask y sus módulos para manejar solicitudes y respuestas JSON
 from app import app
-from db import get_db_connection  # Importamos la función para obtener la conexión a la base de datos
+from db_config import get_db_connection  # Importamos la función para obtener la conexión a la base de datos
 import mysql.connector  # Importamos el conector de MySQL
 
 @app.route('/')  # Definimos la ruta raíz de la API
