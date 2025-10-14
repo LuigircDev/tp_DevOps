@@ -11,7 +11,7 @@ CREATE TABLE tbl_user (
 
 CREATE TABLE todos (
     `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
-    `title` VARCHAR(45) COLLATE utf8_unicode_ci NOT NULL,
+    `title` VARCHAR(100) COLLATE utf8_unicode_ci NOT NULL,
     `completed` TINYINT(1) COLLATE utf8_unicode_ci DEFAULT 0,
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
