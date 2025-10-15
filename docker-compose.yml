@@ -27,6 +27,9 @@ services:
     image: todo-web:latest
     container_name: todo-web
     restart: always
+    volumes:
+    - ./web/nginx/ssl/cert.crt:/etc/nginx/ssl/cert.crt:ro
+    - ./web/nginx/ssl/cert.key:/etc/nginx/ssl/cert.key:ro
     ports:
       - "80:80"
       - "443:443"

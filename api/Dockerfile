@@ -18,4 +18,12 @@ COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python
 
 COPY . .
 
+# Crear usuario no root
+RUN useradd -m appuser
+USER appuser
+
+# HEALTHCHECK
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD python3 -c 'import sys' || exit 1
+
 CMD ["python", "api.py"]

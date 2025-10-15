@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eu
 
 # Configuración
 declare -A IMAGENES=(
@@ -12,47 +12,73 @@ declare -A IMAGENES=(
 CARPETAS=("db" "api" "web")
 CONTENEDORES=("todo-mysql" "todo-api" "todo-web")
 
-# Verifica si una imagen existe localmente
+SSL_DIR="./web/nginx/ssl"
+CERT_CRT="$SSL_DIR/cert.crt"
+CERT_KEY="$SSL_DIR/cert.key"
+
+# Funciones auxiliares
 imagen_existe() {
   local nombre=$1
   docker image inspect "$nombre" > /dev/null 2>&1
 }
 
-# Verifica si hubo cambios con git en una carpeta
-hay_cambios() {
-  local carpeta=$1
-  if git diff --quiet HEAD -- "$carpeta"; then
-    return 1  # No hay cambios
+# Generar certificado autofirmado si no existe
+generar_certificado_ssl() {
+  echo "🔒 Verificando certificados SSL..."
+
+  if [[ -f "$CERT_CRT" && -f "$CERT_KEY" ]]; then
+    echo "✅ Certificados SSL encontrados."
   else
-    return 0  # Hay cambios
+    echo "⚙️  No se encontraron certificados. Creando nuevos certificados autofirmados..."
+    mkdir -p "$SSL_DIR"
+
+    openssl req -x509 -nodes -days 365 \
+      -newkey rsa:2048 \
+      -keyout "$CERT_KEY" \
+      -out "$CERT_CRT" \
+      -subj "/C=AR/ST=BuenosAires/L=BuenosAires/O=TodoApp/OU=Dev/CN=localhost"
+
+    echo "✅ Certificados SSL generados en '$SSL_DIR'."
   fi
 }
 
-# Build de imágenes
-echo "🔍 Verificando imágenes y cambios..."
-for carpeta in "${CARPETAS[@]}"; do
-  imagen="${IMAGENES[$carpeta]}"
+# --- Control principal ---
 
-  if imagen_existe "$imagen"; then
-    echo "📦 Imagen '$imagen' ya existe."
+ACCION="${1:-}"
 
-    if hay_cambios "$carpeta"; then
-      echo "⚙️  Cambios detectados en '$carpeta', reconstruyendo '$imagen'..."
-      docker build -t "$imagen" "./$carpeta"
+# Si el primer argumento es "down", apaga los servicios
+if [[ "$ACCION" == "down" ]]; then
+  echo "🛑 Apagando servicios con docker compose..."
+  docker compose down
+  echo "✅ Servicios detenidos."
+  exit 0
+fi
+
+# Verificar/generar certificados antes de levantar servicios
+generar_certificado_ssl
+
+# Si el primer argumento es "build", realiza el build
+if [[ "$ACCION" == "build" ]]; then
+  echo "⚙️  Iniciando proceso de build..."
+  for carpeta in "${CARPETAS[@]}"; do
+    imagen="${IMAGENES[$carpeta]}"
+
+    if imagen_existe "$imagen"; then
+      echo "📦 La imagen '$imagen' ya existe. Reconstruyendo..."
     else
-      echo "✅ Sin cambios en '$carpeta', no se buildea."
+      echo "🚧 La imagen '$imagen' no existe. Construyendo por primera vez..."
     fi
-  else
-    echo "🚧 Imagen '$imagen' no existe. Buildeando por primera vez..."
-    docker build -t "$imagen" "./$carpeta"
-  fi
-done
 
-# Eliminar contenedores si están corriendo
+    docker build -t "$imagen" "./$carpeta"
+  done
+  echo "✅ Build completo."
+fi
+
+# Eliminar contenedores existentes si están corriendo
 echo "🧹 Eliminando contenedores existentes si están corriendo..."
 for nombre in "${CONTENEDORES[@]}"; do
   if docker ps -a --format '{{.Names}}' | grep -q "^$nombre$"; then
-    echo "🛑 Eliminando contenedor '$nombre'..."
+    echo "🗑️  Eliminando contenedor '$nombre'..."
     docker rm -f "$nombre"
   fi
 done
