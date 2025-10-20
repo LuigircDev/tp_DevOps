@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  todo-mysql:
+    image: todo-mysql:latest
+    container_name: todo-mysql
+    restart: always
+    mem_limit: 512m
+    cpus: 0.5
+    env_file:
+      - .env
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+
+  todo-api:
+    image: todo-api:latest
+    container_name: todo-api
+    restart: always
+    mem_limit: 512m
+    cpus: 0.5
+    env_file:
+      - .env
+    depends_on:
+      - todo-mysql
+    networks:
+      - app-network
+
+  todo-web:
+    image: todo-web:latest
+    container_name: todo-web
+    restart: always
+    mem_limit: 512m
+    cpus: 0.5
+    volumes:
+    - ./web/nginx/ssl/cert.crt:/etc/nginx/ssl/cert.crt:ro
+    - ./web/nginx/ssl/cert.key:/etc/nginx/ssl/cert.key:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - todo-api
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

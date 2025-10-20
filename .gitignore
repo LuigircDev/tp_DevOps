@@ -1,5 +1,32 @@
+# Bases de datos
 data/
+# Archivos de entorno
 .env*
+
+# Logs Escaneos
+seguridad/
+
+# Certificados
+web/nginx/ssl/*.key
+web/nginx/ssl/*.crt
+
+# Dependencias de Node
+/node_modules
+/web/node_modules
+
+# Archivos de build
+/web/build
+/build
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Metadatos generados automaticamente en macOS
+.DS_Store
+
+
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,python,intellij+all
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,python,intellij+all
 
@@ -214,6 +241,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+.checkov_env/
 .env
 .venv
 env/
